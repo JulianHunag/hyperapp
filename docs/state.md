@@ -26,12 +26,3 @@ app({
 ```
 
 The notion of representing the application state as an atomic single source of truth is known as single state tree. The tree is populated using a concept called [actions](/docs/actions.md).
-
-The state is usually an object, but it can also be a string, a number or a boolean.
-
-```jsx
-app({
-  state: "Hello.",
-  view: state => <h1>{state}</h1>
-})
-```

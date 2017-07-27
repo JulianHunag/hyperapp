@@ -1,43 +1,44 @@
 import { h, app } from "../src"
 
-window.requestAnimationFrame = cb => cb()
+function expect(s) {
+  console.log("============================")
+  console.log("  " + s)
+  console.log("============================")
+  return global.expect(s)
+}
+
+window.requestAnimationFrame = setTimeout
 
 beforeEach(() => (document.body.innerHTML = ""))
 
-test("init", () => {
+test("load", done => {
   app({
     view: state => "",
-    state: 1,
+    state: {
+      number: 1
+    },
     actions: {
-      step: state => state + 1
+      up(state) {
+        return {
+          number: state.number + 1
+        }
+      }
     },
     events: {
-      init: [
-        (state, actions) => actions.step(),
-        (state, actions) => actions.step(),
-        state => expect(state).toBe(3)
-      ]
-    }
-  })
-})
-
-test("loaded", done => {
-  app({
-    state: "foo",
-    view: state => h("div", null, state),
-    events: {
-      init() {
-        expect(document.body.innerHTML).toBe("")
+      load(state, actions) {
+        actions.up()
       },
-      loaded() {
-        expect(document.body.innerHTML).toBe(`<div>foo</div>`)
+      update(state, actions, nextState) {
+        expect(state.number).toBe(1)
+        expect(nextState.number).toBe(2)
         done()
       }
     }
   })
 })
 
-test("beforeAction", done => {
+
+test("action", done => {
   app({
     state: "",
     view: state => h("div", null, state),
@@ -52,7 +53,7 @@ test("beforeAction", done => {
         expect(document.body.innerHTML).toBe(`<div>bar</div>`)
         done()
       },
-      beforeAction(state, actions, { name, data }) {
+      action(state, actions, { name, data }) {
         if (name === "set") {
           return  "bar"
         }
@@ -61,7 +62,7 @@ test("beforeAction", done => {
   })
 })
 
-test("afterAction", done => {
+test("resolve", done => {
   app({
     state: "",
     view: state => h("div", null, state),
@@ -76,7 +77,7 @@ test("afterAction", done => {
         expect(document.body.innerHTML).toBe(`<div>baz</div>`)
         done()
       },
-      afterAction: (state, actions, { name, data }) => {
+      resolve: (state, actions, { name, data }) => {
         if (name === "set") {
           return { data: "baz" }
         }
@@ -151,7 +152,7 @@ test("nested action name", () => {
       init(state, actions) {
         actions.foo.bar.set("foobar")
       },
-      beforeAction(state, actions, { name, data }) {
+      action(state, actions, { name, data }) {
         expect(name).toBe("foo.bar.set")
         expect(data).toBe("foobar")
       }

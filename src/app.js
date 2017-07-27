@@ -1,5 +1,5 @@
 export function app(props) {
-  var state = {}
+  var state
   var actions = {}
   var events = {}
   var mixins = []
@@ -17,8 +17,9 @@ export function app(props) {
     })
 
     iterate(actions, props.actions)
+
     mixins = mixins.concat(props.mixins || [])
-    state = merge(state, props.state || state)
+    state = merge(state, props.state)
   }
 
   schedule(
@@ -69,12 +70,15 @@ export function app(props) {
       if (typeof action === "function") {
         namespace[key] = function(data) {
           emit("action", { name: name, data: data })
+
           var result = emit("resolve", action(state, actions, data))
+
           return typeof result === "function" ? result(update) : update(result)
 
-          // return result && result.then && result.then(update)
-          //   ? result
-          //   : typeof result === "function" ? result(update) : update(result)
+          /* –– To promise or not to byte...? ––
+          return result && result.then && result.then(update)
+            ? result
+            : typeof result === "function" ? result(update) : update(result) */
         }
       } else {
         iterate(namespace[key] || (namespace[key] = {}), action, name)
@@ -88,13 +92,18 @@ export function app(props) {
     }), withData
   }
 
-  function merge(from, to) {
-    for (var i in from) {
-      if (!(i in to)) {
-        to[i] = from[i]
-      }
+  function merge(a, b) {
+    var obj = {}
+
+    for (var i in a) {
+      obj[i] = a[i]
     }
-    return to
+
+    for (var i in b) {
+      obj[i] = b[i]
+    }
+
+    return obj
   }
 
   function getKey(node) {
